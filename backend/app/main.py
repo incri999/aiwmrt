@@ -1,14 +1,27 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from app.gemini import classify_waste
-from app.schemas import WasteResponse
-from app.supabase import save_record
+from app.database import save_record
 
-app = FastAPI(title="AI Waste Management API")
+app = FastAPI(
+    title="AI Waste Management API",
+    version="1.0.0"
+)
 
-@app.post("/analyze-waste", response_model=WasteResponse)
+@app.post("/analyze-waste")
 async def analyze_waste(image: UploadFile = File(...)):
-    image_bytes = await image.read()
-    result = classify_waste(image_bytes)
+    try:
+        image_bytes = await image.read()
 
-    save_record(result)
-    return result
+        # 🔹 Existing working classification
+        result = classify_waste(image_bytes)
+
+        # 🔹 Safe DB logging (will NOT break API)
+        try:
+            save_record(result)
+        except Exception as db_error:
+            print("Neon DB error:", db_error)
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
