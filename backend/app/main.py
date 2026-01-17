@@ -7,6 +7,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# ✅ CORS FIX (THIS IS WHAT YOU WERE MISSING)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # OK for internship/demo
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.post("/analyze-waste")
 async def analyze_waste(image: UploadFile = File(...)):
     try:
